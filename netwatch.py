@@ -104,23 +104,24 @@ def finite_loop(Delay=10,Count=4,Target=None):
 			time.sleep(Delay)
 	return n
 
-def send_report():
-	subj = 'test subject from pi'
-	bodyTxt = 'here is a message'
-	Html = '<p>message stuff here</p>'
+def send_report(Subject='Connectivity Report',Body=None):
+	bodyText = Body
+	if bodyText is None:
+		bodyText = 'Report made at %s' % (time.ctime())
+	Html = '<p>%s</p>'%(bodyText)
 	msg = MIMEMultipart('mixed')
-	msg['From'] = 'pi@pinot3.local' # fix this
-	msg['To'] = 'kevin.bjorke+network@gmail.com'
-	msg['Subject'] = subj
+	msg['From'] = 'P not 3 <kevin.bjorke@gmail.com>' # fix this
+	msg['To'] = 'Kevin Bjorke <kevin.bjorke@gmail.com>'
+	msg['Subject'] = Subject
 	msg.preamble = 'weird why would you see this?'
 	alt = MIMEMultipart('alternative')
-	mtxt = MIMEText(bodyTxt)
+	mtxt = MIMEText(bodyText)
 	mhtml = MIMEText(Html)
 	alt.attach(mtxt)
 	alt.attach(mhtml)
 	msg.attach(alt)
 	s = smtplib.SMTP('localhost')
-	s.sendmail('pi@pinot3.local', 'kevin.bjorke+network@gmail.com', msg.as_String())
+	s.sendmail('kevin.bjorke@gmail.com', 'kevin.bjorke@gmail.com', msg.as_String())
 	s.quit()
 
 def old_test():
@@ -133,11 +134,13 @@ def old_test():
 #############
 
 if len(sys.argv)>1:
-	t = time.time()
-	print 'starting at %d' % (t)
-	endless_logging(Delay=3)
+	entries = read_log()
+	print report_uptime(entries)
 	exit()
 
 if __name__ == '__main__':
-	print 'test time'
-	print report_uptime(read_log())
+	t = time.time()
+	print 'starting log at %d' % (t)
+	endless_logging(Delay=7*60) # seven minutes
+
+# eof
