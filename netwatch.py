@@ -6,6 +6,9 @@ import subprocess as sp
 import time
 import platform
 import math
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 class SV:
 	TC=0
@@ -100,6 +103,25 @@ def finite_loop(Delay=10,Count=4,Target=None):
 		if i < (Count-1):
 			time.sleep(Delay)
 	return n
+
+def send_report():
+	subj = 'test subject from pi'
+	bodyTxt = 'here is a message'
+	Html = '<p>message stuff here</p>'
+	msg = MIMEMultipart('mixed')
+	msg['From'] = 'pi@pinot3.local' # fix this
+	msg['To'] = 'kevin.bjorke+network@gmail.com'
+	msg['Subject'] = subj
+	msg.preamble = 'weird why would you see this?'
+	alt = MIMEMultipart('alternative')
+	mtxt = MIMEText(bodyTxt)
+	mhtml = MIMEText(Html)
+	alt.attach(mtxt)
+	alt.attach(mhtml)
+	msg.attach(alt)
+	s = smtplib.SMTP('localhost')
+	s.sendmail('pi@pinot3.local', 'kevin.bjorke+network@gmail.com', msg.as_String())
+	s.quit()
 
 def old_test():
 	ct=4
