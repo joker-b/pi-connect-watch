@@ -188,7 +188,7 @@ def chart_uptime(entries):
 			highest = max(highest,fpct)
 			html = html + ('&nbsp;' * pct) + '*'
 			if (pct < numCols):
-				html = html + '<span style="bgcolor: #a0a0a0;">'
+				html = html + '<span style="background-color: #a0a0a0;">'
 				html = html + ('&nbsp;' * (numCols-pct))
 				html = html + '</span>'
 			prevPct = pct
