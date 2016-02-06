@@ -108,7 +108,7 @@ def report_uptime(entries):
 	report = report + '\n%d%% Uptime' % (100*nUp/len(entries))
 	return report
 
-def chart_uptime(entries):
+def chart_js_uptime(entries):
 	if len(entries) < 1:
 		return '<p>No Entries.</p>'
 	T0 = entries[0]['t']
@@ -143,7 +143,7 @@ def chart_uptime(entries):
     </head><body>
 """ % (thours)
 	html = html + '<p>Time span: %d hours, %d samples</p>' % (thours,len(entries))
-	html = html + '<p><b color="#FF3420">%d%% Uptime</b></p>' % (100*nUp/len(entries))	
+	html = html + '<p><b style="color: #FF3420">%d%% Uptime</b></p>' % (100*nUp/len(entries))	
 	html = html + """
     <div>
     <h3>Chart:</h3>
@@ -153,6 +153,37 @@ def chart_uptime(entries):
 </body>
 </html>
 """
+	return html
+
+def chart_uptime(entries):
+	if len(entries) < 1:
+		return '<p>No Entries.</p>'
+	T0 = entries[0]['t']
+	if len(entries) < 2:
+		return 'Time %s: %s' % (time.ctime(T0), entries[0]['c'])
+	TN = entries[len(entries)-1]['t']
+	tspan = TN-T0
+	thours = max(1,int(math.floor((tspan/3600.0))))
+	nUp = len([e for e in entries if e['c']])
+	html = "<html><body>"
+	html = html + '<p>Time span: %d hours, %d samples</p>' % (thours,len(entries))
+	html = html + '<p><b style="color: #FF3420">%d%% Uptime</b></p>' % (100*nUp/len(entries))	
+	numRows = 30
+	numCols = 50
+	rowSpan = tspan/numRows
+	html = html + '<p><tt>'
+	for i in range(0,numRows):
+		html = html + '* '
+		tStart = T0 + i*rowSpan
+		tEnd = tStart + rowSpan
+		sube = [e for e in entries if e['t']>=tStart and e['t']<=tEnd]
+		if len(sube) > 0:
+			nUp = len([e for e in sube if e['c']])
+			pct = numCols * nUp / len(sube)
+			html = html + (' ' * pct) + '|'
+		html = html + '<br />'
+	html = html + "</tt></p>"
+	html = html + "</body></html>"
 	return html
 
 #######
