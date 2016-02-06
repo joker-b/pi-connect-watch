@@ -6,6 +6,7 @@ import subprocess as sp
 import time
 import platform
 import math
+import random
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -41,24 +42,28 @@ def connected(Target=None):
 	if 'Windows' in platform.uname():
 		dnull = open('junk.txt','w')
 	else:
-		dnull = open('/dev/null','w')
+		dnull = open('biglog.log','a')
 	result = sp.call(cmd.split(),shell=False,stderr=sp.STDOUT,stdout=dnull)
 	dnull.close()
-	if result != 0:
+	print "%s: result was %d for %s" % (time.asctime(),result,target)
+	if result == 2:
 		sv.rotate()
-	return result
+	return (result != 2)
 
-def endless_logging(Delay=10,Target=None):
+def endless_logging(Delay=10,Variance=3,Target=None):
 	global logName
 	while True:
 		t = time.time()
 		c = connected(Target=Target)
-		if c != 0:
+		if not c:
 			t = -t
 		fp = open(logName,'a')
 		fp.write('%d\n'%(t))
 		fp.close()
-		time.sleep(Delay)
+		d = Delay
+		if Variance != 0:
+			d = d + random.randint(-Variance,Variance)
+		time.sleep(d)
 
 def read_log(LogFile=None,Start=None):
 	global logName
@@ -133,7 +138,7 @@ def send_report(Subject='Connectivity Report',Body=None):
 	s.quit()
 
 def old_test():
-	ct=4
+	ct=2
 	for trg in ['linkedin.com','liynksdasygdgs.org',None]:
 		print "checking again '%s'..." % (trg)
 		r = finite_loop(Delay=3,Count=ct,Target=trg)
@@ -147,8 +152,9 @@ if len(sys.argv)>1:
 	exit()
 
 if __name__ == '__main__':
+	# old_test()
 	t = time.time()
 	print 'starting log at %d' % (t)
-	endless_logging(Delay=7*60) # seven minutes
+	endless_logging(Delay=5*60,Variance=120) # seven minutes
 
 # eof
