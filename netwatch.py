@@ -103,7 +103,49 @@ def report_uptime(entries):
 	TN = entries[len(entries)-1]['t']
 	tspan = TN-T0
 	thours = max(1,int(math.floor((tspan/3600.0))))
-	return 'Time span: %d hours' % (thours)
+	report = 'Time span: %d hours, %d samples' % (thours,len(entries))
+	nUp = len([e for e in entries if e['c']])
+	report = report + '\n%d%% Uptime' % (100*nUp/len(entries))
+	return report
+
+def chart_uptime(entries):
+	if len(entries) < 1:
+		return '<p>No Entries.</p>'
+	T0 = entries[0]['t']
+	if len(entries) < 2:
+		return 'Time %s: %s' % (time.ctime(T0), entries[0]['c'])
+	TN = entries[len(entries)-1]['t']
+	tspan = TN-T0
+	thours = max(1,int(math.floor((tspan/3600.0))))
+	html = '<p>Time span: %d hours, %d samples</p>' % (thours,len(entries))
+	nUp = len([e for e in entries if e['c']])
+	html = html + '<p></b>%d%% Uptime</b></p>' % (100*nUp/len(entries))	
+	html = html + """
+<div>
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable([
+          ['Time', 'Status'],
+ """
+	html = html + ',\n'.join(['[%d,%d]'%(e['t'],((0+e['c']))) for e in entries])
+	html = html + """]);
+        var options = {
+          title: 'Uptime over %d hours',
+          hAxis: {title: 'Time'},
+          vAxis: {title: 'Status', minValue: -0.25, maxValue: 0.25},
+          legend: 'none'
+        };
+        var chart = new google.visualization.ScatterChart(document.getElementById('chart_div'));
+        chart.draw(data, options);
+      }
+    </script>
+    <div id="chart_div" style="width: 900px; height: 500px;"></div>
+</div>
+""" % (thours)
+	return html
 
 #######
 
@@ -151,6 +193,8 @@ def old_test():
 if len(sys.argv)>1:
 	entries = read_log(LogFile=sys.argv[1])
 	print report_uptime(entries)
+	#print chart_uptime(entries)
+	send_report(Body=report_uptime(entries),Html=chart_uptime(entries),Subject='Testing')
 	exit()
 
 if __name__ == '__main__':
