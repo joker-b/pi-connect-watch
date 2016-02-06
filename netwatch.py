@@ -117,11 +117,9 @@ def chart_uptime(entries):
 	TN = entries[len(entries)-1]['t']
 	tspan = TN-T0
 	thours = max(1,int(math.floor((tspan/3600.0))))
-	html = '<p>Time span: %d hours, %d samples</p>' % (thours,len(entries))
 	nUp = len([e for e in entries if e['c']])
-	html = html + '<p></b>%d%% Uptime</b></p>' % (100*nUp/len(entries))	
 	html = html + """
-<div>
+<html><head>
 	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
       google.charts.load('current', {'packages':['corechart']});
@@ -142,8 +140,14 @@ def chart_uptime(entries):
         chart.draw(data, options);
       }
     </script>
+    </head><body>
+"""
+	html = html + '<p>Time span: %d hours, %d samples</p>' % (thours,len(entries))
+	html = html + '<p></b>%d%% Uptime</b></p>' % (100*nUp/len(entries))	
+	html = html + """
     <div id="chart_div" style="width: 900px; height: 500px;"></div>
-</div>
+</body>
+</html>
 """ % (thours)
 	return html
 
