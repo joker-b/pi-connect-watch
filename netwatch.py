@@ -49,13 +49,14 @@ def connected(Target=None):
 	return result
 
 def endless_logging(Delay=10,Target=None):
-	fp = open(logName,'a')
 	while True:
 		t = time.time()
 		c = connected(Target=Target)
 		if c != 0:
 			t = -t
+		fp = open(logName,'a')
 		fp.write('%d\n'%(t))
+		fp.close()
 		time.sleep(Delay)
 
 def read_log(Start=None):
