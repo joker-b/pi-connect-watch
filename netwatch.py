@@ -202,7 +202,7 @@ if len(sys.argv)>1:
 	entries = read_log(LogFile=sys.argv[1])
 	print report_uptime(entries)
 	#print chart_uptime(entries)
-	st = Date.asctime()
+	st = time.asctime()
 	send_report(Body=report_uptime(entries),Html=chart_uptime(entries),Subject='Testing %s'%(st))
 	# send_report(Body=report_uptime(entries),Subject='Testing 2')
 	exit()
@@ -211,6 +211,6 @@ if __name__ == '__main__':
 	# old_test()
 	t = time.time()
 	print 'starting log at %d' % (t)
-	endless_logging(Delay=5*60,Variance=120) # seven minutes
+	endless_logging(Delay=3*60,Variance=120) # seven minutes
 
 # eof
