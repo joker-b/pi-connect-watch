@@ -190,11 +190,11 @@ def chart_uptime(entries):
 			html = html + ('&nbsp;' * prevPct) + '<span style="color: #a090a0;">?</span>'
 			if (prevPct < numCols):
 				html = html + ('&nbsp;' * (numCols-prevPct))
-		html = html + '| </tt>'
+		html = html + '| % 3d%% </tt>' % (fpct)
 		if len(sube) == 0:
 			html = html + '<span style="color: #a090a0;">--</span>'
 		else:
-			html = html + '%s %3d%% (%d)' % (time.ctime(tStart), fpct, len(sube))
+			html = html + '%s (%d)' % (time.ctime(tStart), len(sube))
 		html = html + '<br />'
 	html = html + "</p>"
 	html = html + "</body></html>"
