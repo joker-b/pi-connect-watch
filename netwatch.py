@@ -173,6 +173,8 @@ def chart_uptime(entries):
 	rowSpan = tspan/numRows
 	html = html + '<p>'
 	prevPct = numCols
+	lowest = 100
+	highest = 0
 	for i in range(0,numRows):
 		html = html + '<tt>|'
 		tStart = T0 + i*rowSpan
@@ -182,9 +184,13 @@ def chart_uptime(entries):
 			nUp = len([e for e in sube if e['c']])
 			fpct = 100 * nUp / len(sube)
 			pct = numCols * nUp / len(sube)
+			lowest = min(lowest,fpct)
+			highest = max(highest,fpct)
 			html = html + ('&nbsp;' * pct) + '*'
 			if (pct < numCols):
+				html = html + '<span style="bgcolor: #a0a0a0;">'
 				html = html + ('&nbsp;' * (numCols-pct))
+				html = html + '</span>'
 			prevPct = pct
 		else:
 			html = html + ('&nbsp;' * prevPct) + '<span style="color: #a090a0;">?</span>'
@@ -194,9 +200,10 @@ def chart_uptime(entries):
 		if len(sube) == 0:
 			html = html + '<span style="color: #a090a0;">--</span>'
 		else:
-			html = html + '%s (%d)' % (time.ctime(tStart), len(sube))
+			html = html + '<i>%s (%d)</i>' % (time.ctime(tStart), len(sube))
 		html = html + '<br />'
 	html = html + "</p>"
+	html = html + "<p><i>Range of slices: %d%% to %d%%</i></p>" % (lowest,highest)
 	html = html + "</body></html>"
 	return html
 
@@ -220,7 +227,7 @@ def send_report(Subject='Connectivity Report',Body=None,Html=None):
 	if htmlText is None:
 		htmlText = '<html><body><p>%s</p></body></html>'%(bodyText)
 	msg = MIMEMultipart('mixed')
-	msg['From'] = 'P not 3 <kevin.bjorke@gmail.com>' # fix this
+	msg['From'] = 'Pi not 3 <kevin.bjorke@gmail.com>'
 	msg['To'] = 'Kevin Bjorke <kevin.bjorke@gmail.com>'
 	msg['Subject'] = Subject
 	msg.preamble = 'weird why would you see this?'
