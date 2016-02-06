@@ -174,6 +174,9 @@ def chart_uptime(entries,NumRows=28,NumCols=56):
 	html = html + '<p>'
 	lowest = 100
 	highest = 0
+	mark = '*'
+	tag = '=='
+	bgc = 'white'
 	for i in range(0,NumRows):
 		html = html + '<tt>|'
 		tStart = T0 + i*rowSpan
@@ -185,23 +188,22 @@ def chart_uptime(entries,NumRows=28,NumCols=56):
 			pct = NumCols * nUp / len(sube)
 			lowest = min(lowest,fpct)
 			highest = max(highest,fpct)
-			html = html + ('&nbsp;' * pct) + '*'
-			if (pct < NumCols):
-				html = html + '<span style="background-color: #a0e0e0;">'
-				html = html + ('&nbsp;' * (NumCols-pct))
-				html = html + '</span>'
+			mark = '*'
+			tag = '<i>%s (%d)</i>' % (time.ctime(tStart), len(sube))
+			bgc = '#e09090'
 		else:
-			html = html + ('&nbsp;' * estPct) + '<span style="color: #a090a0;">?</span>'
-			if (estPct < NumCols):
-				html = html + '<span style="background-color: #c0e0e0;">'
-				html = html + ('&nbsp;' * (NumCols-estPct))
-				html = html + '</span>'
+			fpct = allPct
+			pct = estPct
+			mark = '?'
+			tag = '<span style="color: #a090a0;">--</span>'
+			bgc = '#e0b0b0'
+		html = html + ('&nbsp;' * pct) + mark
+		if (pct < NumCols):
+			html = html + '<span style="background-color: %s;">' %(bgc)
+			html = html + ('&nbsp;' * (NumCols-pct))
+			html = html + '</span>'
 		html = html + '| % 3d%% </tt>' % (fpct)
-		if len(sube) == 0:
-			html = html + '<span style="color: #a090a0;">--</span>'
-		else:
-			html = html + '<i>%s (%d)</i>' % (time.ctime(tStart), len(sube))
-		html = html + '<br />'
+		html = html + tag + '<br />'
 	html = html + "</p>"
 	html = html + "<p><i>Range of slices: %d%% to %d%%</i></p>" % (lowest,highest)
 	html = html + "</body></html>"
