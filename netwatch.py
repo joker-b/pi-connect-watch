@@ -49,6 +49,7 @@ def connected(Target=None):
 	return result
 
 def endless_logging(Delay=10,Target=None):
+	global logName
 	while True:
 		t = time.time()
 		c = connected(Target=Target)
@@ -59,8 +60,14 @@ def endless_logging(Delay=10,Target=None):
 		fp.close()
 		time.sleep(Delay)
 
-def read_log(Start=None):
+def read_log(LogFile=None,Start=None):
+	global logName
 	entries = []
+	if LogFile is not None:
+		if os.path.exists(LogFile):
+			logName = LogFile
+		else:
+			print 'No file "%s" so using "%s"' % (LogFile,logName)
 	if not os.path.exists(logName):
 		print 'log unavailable'
 		return entries
@@ -135,7 +142,7 @@ def old_test():
 #############
 
 if len(sys.argv)>1:
-	entries = read_log()
+	entries = read_log(LogFile=sys.argv[1])
 	print report_uptime(entries)
 	exit()
 
