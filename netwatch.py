@@ -168,21 +168,35 @@ def chart_uptime(entries):
 	html = "<html><body>"
 	html = html + '<p>Time span: %d hours, %d samples</p>' % (thours,len(entries))
 	html = html + '<p><b style="color: #FF3420">%d%% Uptime</b></p>' % (100*nUp/len(entries))	
-	numRows = 30
-	numCols = 50
+	numRows = 28
+	numCols = 56
 	rowSpan = tspan/numRows
-	html = html + '<p><tt>'
+	html = html + '<p>'
+	prevPct = numCols
 	for i in range(0,numRows):
-		html = html + '* '
+		html = html + '<tt>|'
 		tStart = T0 + i*rowSpan
 		tEnd = tStart + rowSpan
 		sube = [e for e in entries if e['t']>=tStart and e['t']<=tEnd]
 		if len(sube) > 0:
 			nUp = len([e for e in sube if e['c']])
+			fpct = 100 * nUp / len(sube)
 			pct = numCols * nUp / len(sube)
-			html = html + (' ' * pct) + '|'
+			html = html + ('&nbsp;' * pct) + '*'
+			if (pct < numCols):
+				html = html + ('&nbsp;' * (numCols-pct))
+			prevPct = pct
+		else:
+			html = html + ('&nbsp;' * prevPct) + '<span style="color: #a090a0;">?</span>'
+			if (prevPct < numCols):
+				html = html + ('&nbsp;' * (numCols-prevPct))
+		html = html + '| </tt>'
+		if len(sube) == 0:
+			html = html + '<span style="color: #a090a0;">--</span>'
+		else:
+			html = html + '%s %3d%% (%d)' % (time.ctime(tStart), fpct, len(sube))
 		html = html + '<br />'
-	html = html + "</tt></p>"
+	html = html + "</p>"
 	html = html + "</body></html>"
 	return html
 
