@@ -118,7 +118,7 @@ def chart_uptime(entries):
 	tspan = TN-T0
 	thours = max(1,int(math.floor((tspan/3600.0))))
 	nUp = len([e for e in entries if e['c']])
-	html = html + """
+	html = """
 <html><head>
 	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
@@ -141,14 +141,18 @@ def chart_uptime(entries):
       }
     </script>
     </head><body>
-"""
+""" % (thours)
 	html = html + '<p>Time span: %d hours, %d samples</p>' % (thours,len(entries))
 	html = html + '<p></b>%d%% Uptime</b></p>' % (100*nUp/len(entries))	
 	html = html + """
+    <div>
+    <h3>Chart:</h3>
     <div id="chart_div" style="width: 900px; height: 500px;"></div>
+    <p>End of chart</p>
+    </div>
 </body>
 </html>
-""" % (thours)
+"""
 	return html
 
 #######
@@ -169,15 +173,15 @@ def send_report(Subject='Connectivity Report',Body=None,Html=None):
 		bodyText = 'Report made at %s' % (time.ctime())
 	htmlText = Html
 	if htmlText is None:
-		htmlText = '<p>%s</p>'%(bodyText)
+		htmlText = '<html><body><p>%s</p></body></html>'%(bodyText)
 	msg = MIMEMultipart('mixed')
 	msg['From'] = 'P not 3 <kevin.bjorke@gmail.com>' # fix this
 	msg['To'] = 'Kevin Bjorke <kevin.bjorke@gmail.com>'
 	msg['Subject'] = Subject
 	msg.preamble = 'weird why would you see this?'
 	alt = MIMEMultipart('alternative')
-	mbody = MIMEText(bodyText)
-	mhtml = MIMEText(htmlText)
+	mbody = MIMEText(bodyText,'plain')
+	mhtml = MIMEText(htmlText,'html')
 	alt.attach(mbody)
 	alt.attach(mhtml)
 	msg.attach(alt)
@@ -198,7 +202,9 @@ if len(sys.argv)>1:
 	entries = read_log(LogFile=sys.argv[1])
 	print report_uptime(entries)
 	#print chart_uptime(entries)
-	send_report(Body=report_uptime(entries),Html=chart_uptime(entries),Subject='Testing')
+	st = Date.asctime()
+	send_report(Body=report_uptime(entries),Html=chart_uptime(entries),Subject='Testing %s'%(st))
+	# send_report(Body=report_uptime(entries),Subject='Testing 2')
 	exit()
 
 if __name__ == '__main__':
