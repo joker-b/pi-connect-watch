@@ -117,20 +117,22 @@ def finite_loop(Delay=10,Count=4,Target=None):
 			time.sleep(Delay)
 	return n
 
-def send_report(Subject='Connectivity Report',Body=None):
+def send_report(Subject='Connectivity Report',Body=None,Html=None):
 	bodyText = Body
 	if bodyText is None:
 		bodyText = 'Report made at %s' % (time.ctime())
-	Html = '<p>%s</p>'%(bodyText)
+	htmlText = Html
+	if htmlText is None:
+		htmlText = '<p>%s</p>'%(bodyText)
 	msg = MIMEMultipart('mixed')
 	msg['From'] = 'P not 3 <kevin.bjorke@gmail.com>' # fix this
 	msg['To'] = 'Kevin Bjorke <kevin.bjorke@gmail.com>'
 	msg['Subject'] = Subject
 	msg.preamble = 'weird why would you see this?'
 	alt = MIMEMultipart('alternative')
-	mtxt = MIMEText(bodyText)
-	mhtml = MIMEText(Html)
-	alt.attach(mtxt)
+	mbody = MIMEText(bodyText)
+	mhtml = MIMEText(htmlText)
+	alt.attach(mbody)
 	alt.attach(mhtml)
 	msg.attach(alt)
 	s = smtplib.SMTP('localhost')
