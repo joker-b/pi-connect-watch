@@ -155,7 +155,7 @@ def chart_js_uptime(entries):
 """
 	return html
 
-def chart_uptime(entries):
+def chart_uptime(entries,NumRows=28,NumCols=56):
 	if len(entries) < 1:
 		return '<p>No Entries.</p>'
 	T0 = entries[0]['t']
@@ -166,16 +166,15 @@ def chart_uptime(entries):
 	thours = max(1,int(math.floor((tspan/3600.0))))
 	nUp = len([e for e in entries if e['c']])
 	allPct = 100*nUp/len(entries)
+	estPct = NumCols*nUp/len(entries)
 	html = "<html><body>"
 	html = html + '<p>Time span: %d hours, %d samples</p>' % (thours,len(entries))
 	html = html + '<p><b style="color: #FF3420">%d%% Uptime</b></p>' % (allPct)	
-	numRows = 28
-	numCols = 56
-	rowSpan = tspan/numRows
+	rowSpan = tspan/NumRows
 	html = html + '<p>'
 	lowest = 100
 	highest = 0
-	for i in range(0,numRows):
+	for i in range(0,NumRows):
 		html = html + '<tt>|'
 		tStart = T0 + i*rowSpan
 		tEnd = tStart + rowSpan
@@ -183,18 +182,20 @@ def chart_uptime(entries):
 		if len(sube) > 0:
 			nUp = len([e for e in sube if e['c']])
 			fpct = 100 * nUp / len(sube)
-			pct = numCols * nUp / len(sube)
+			pct = NumCols * nUp / len(sube)
 			lowest = min(lowest,fpct)
 			highest = max(highest,fpct)
 			html = html + ('&nbsp;' * pct) + '*'
-			if (pct < numCols):
-				html = html + '<span style="background-color: #a0a0a0;">'
-				html = html + ('&nbsp;' * (numCols-pct))
+			if (pct < NumCols):
+				html = html + '<span style="background-color: #a0e0e0;">'
+				html = html + ('&nbsp;' * (NumCols-pct))
 				html = html + '</span>'
 		else:
-			html = html + ('&nbsp;' * allPct) + '<span style="color: #a090a0;">?</span>'
-			if (allPct < numCols):
-				html = html + ('&nbsp;' * (numCols-allPct))
+			html = html + ('&nbsp;' * estPct) + '<span style="color: #a090a0;">?</span>'
+			if (estPct < NumCols):
+				html = html + '<span style="background-color: #c0e0e0;">'
+				html = html + ('&nbsp;' * (NumCols-estPct))
+				html = html + '</span>'
 		html = html + '| % 3d%% </tt>' % (fpct)
 		if len(sube) == 0:
 			html = html + '<span style="color: #a090a0;">--</span>'
