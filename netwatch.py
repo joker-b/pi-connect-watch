@@ -143,7 +143,7 @@ def chart_uptime(entries):
     </head><body>
 """ % (thours)
 	html = html + '<p>Time span: %d hours, %d samples</p>' % (thours,len(entries))
-	html = html + '<p></b>%d%% Uptime</b></p>' % (100*nUp/len(entries))	
+	html = html + '<p><b color="#FF3420">%d%% Uptime</b></p>' % (100*nUp/len(entries))	
 	html = html + """
     <div>
     <h3>Chart:</h3>
