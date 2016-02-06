@@ -178,7 +178,7 @@ def send_report(Subject='Connectivity Report',Body=None,Html=None):
 	alt.attach(mhtml)
 	msg.attach(alt)
 	s = smtplib.SMTP('localhost')
-	s.sendmail('kevin.bjorke@gmail.com', 'kevin.bjorke@gmail.com', msg.as_String())
+	s.sendmail('kevin.bjorke@gmail.com', 'kevin.bjorke@gmail.com', msg.as_string())
 	s.quit()
 
 def old_test():
