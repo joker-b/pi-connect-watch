@@ -259,7 +259,7 @@ if len(sys.argv)>1:
 	#print chart_uptime(entries)
 	st = time.asctime()
 	ht = chart_uptime(entries)
-	print ht
+	#print ht
 	send_report(Body=report_uptime(entries),Html=ht,Subject='Testing %s'%(st))
 	# send_report(Body=report_uptime(entries),Subject='Testing 2')
 	exit()
