@@ -156,7 +156,7 @@ def chart_js_uptime(entries):
 """
 	return html
 
-def chart_uptime(entries,NumRows=20,NumCols=56):
+def chart_uptime(entries,NumRows=30,NumCols=64):
 	if len(entries) < 1:
 		return '<p>No Entries.</p>'
 	T0 = entries[0]['t']
@@ -171,7 +171,6 @@ def chart_uptime(entries,NumRows=20,NumCols=56):
 	html = "<html><body>"
 	rowSpan = tspan/NumRows
 	html = html + '<p><i>Start: %s</i><br/>\n'%(time.ctime(T0))
-	html = html + '<p>'
 	lowest = 100
 	highest = 0
 	mark = '*'
@@ -191,8 +190,8 @@ def chart_uptime(entries,NumRows=20,NumCols=56):
 		else:
 			fpct = allPct
 			pct = estPct
-			mark = '?'
-			bgc = '#e0b0b0'
+			mark = '*'
+			bgc = '#e0c0b0'
 		lowest = min(lowest,fpct)
 		highest = max(highest,fpct)
 		html = html + '<span style="background-color: %s;">' %(fgc)
@@ -201,8 +200,7 @@ def chart_uptime(entries,NumRows=20,NumCols=56):
 			html = html + '<span style="background-color: %s;">' %(bgc)
 			html = html + ('&nbsp;' * (NumCols-pct))
 			html = html + '</span>'
-		html = html + ' % 3d%% <i>(%d)</i><br/>\n' % (fpct,len(sube))
-	html = html + "</p>"
+		html = html + ' % 3d%%<br/>\n' % (fpct)
 	html = html + '<i>End: %s</i></p>\n'%(time.ctime(TN))
 	html = html + "<p><i>Connectivity Range: %d%% to %d%%</i><br/>\n" % (lowest,highest)
 	html = html + 'across %d hours (%d samples)</p>\n' % (thours,len(entries))
@@ -222,7 +220,7 @@ def finite_loop(Delay=10,Count=4,Target=None):
 			time.sleep(Delay)
 	return n
 
-def send_report(Subject='Connectivity Report',Body=None,Html=None):
+def send_report(Subject='Generic Report',Body=None,Html=None):
 	bodyText = Body
 	if bodyText is None:
 		bodyText = 'Report made at %s' % (time.ctime())
@@ -256,12 +254,10 @@ def old_test():
 if len(sys.argv)>1:
 	entries = read_log(LogFile=sys.argv[1])
 	print report_uptime(entries)
-	#print chart_uptime(entries)
 	st = time.asctime()
+	bt = report_uptime(entries)
 	ht = chart_uptime(entries)
-	#print ht
-	send_report(Body=report_uptime(entries),Html=ht,Subject='Testing %s'%(st))
-	# send_report(Body=report_uptime(entries),Subject='Testing 2')
+	send_report(Body=bt,Html=ht,Subject='Connectivity Report %s'%(st))
 	exit()
 
 if __name__ == '__main__':
