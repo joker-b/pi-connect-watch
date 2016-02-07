@@ -170,14 +170,14 @@ def chart_uptime(entries,NumRows=20,NumCols=56):
 	estPct = NumCols*nUp/len(entries)
 	html = "<html><body>"
 	rowSpan = tspan/NumRows
-	html = html + '<p><i>%s</i></p>\n'%(time.ctime(T0))
+	html = html + '<p><i>Start: %s</i><br/>\n'%(time.ctime(T0))
 	html = html + '<p>'
 	lowest = 100
 	highest = 0
 	mark = '*'
 	tag = '=='
 	bgc = 'white'
-	fgc = '#9090e0'
+	fgc = '#b0e0b0'
 	for i in range(0,NumRows):
 		tStart = T0 + i*rowSpan
 		tEnd = tStart + rowSpan
@@ -203,9 +203,9 @@ def chart_uptime(entries,NumRows=20,NumCols=56):
 			html = html + '</span>'
 		html = html + ' % 3d%% <i>(%d)</i><br/>\n' % (fpct,len(sube))
 	html = html + "</p>"
-	html = html + '<p><i>%s</i></p>\n'%(time.ctime(TN))
-	html = html + "<p><i>Range of slices: %d%% to %d%%</i></p>\n" % (lowest,highest)
-	html = html + '<p>Time span: %d hours, %d samples</p>\n' % (thours,len(entries))
+	html = html + '<i>End: %s</i></p>\n'%(time.ctime(TN))
+	html = html + "<p><i>Connectivity Range: %d%% to %d%%</i><br/>\n" % (lowest,highest)
+	html = html + 'across %d hours (%d samples)</p>\n' % (thours,len(entries))
 	html = html + '<p><b style="color: #FF3420">%d%% Overall Uptime</b></p>\n' % (allPct)	
 	html = html + "</body></html>"
 	return html
