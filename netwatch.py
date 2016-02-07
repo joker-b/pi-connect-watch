@@ -42,7 +42,8 @@ def connected(Target=None):
 	if 'Windows' in platform.uname():
 		dnull = open('junk.txt','w')
 	else:
-		dnull = open('biglog.log','a')
+		#dnull = open('biglog.log','a')
+		dnull = open('/dev/null','w')
 	result = sp.call(cmd.split(),shell=False,stderr=sp.STDOUT,stdout=dnull)
 	dnull.close()
 	print "%s: result was %d for %s" % (time.asctime(),result,target)
@@ -168,10 +169,8 @@ def chart_uptime(entries,NumRows=20,NumCols=56):
 	allPct = 100*nUp/len(entries)
 	estPct = NumCols*nUp/len(entries)
 	html = "<html><body>"
-	html = html + '<p>Time span: %d hours, %d samples</p>' % (thours,len(entries))
-	html = html + '<p><b style="color: #FF3420">%d%% Uptime</b></p>' % (allPct)	
 	rowSpan = tspan/NumRows
-	html = html + '<p><i>%s</i></p>'%(time.ctime(T0))
+	html = html + '<p><i>%s</i></p>\n'%(time.ctime(T0))
 	html = html + '<p>'
 	lowest = 100
 	highest = 0
@@ -202,10 +201,12 @@ def chart_uptime(entries,NumRows=20,NumCols=56):
 			html = html + '<span style="background-color: %s;">' %(bgc)
 			html = html + ('&nbsp;' * (NumCols-pct))
 			html = html + '</span>'
-		html = html + ' % 3d%% <i>(%d)</i><br/>' % (fpct,len(sube))
+		html = html + ' % 3d%% <i>(%d)</i><br/>\n' % (fpct,len(sube))
 	html = html + "</p>"
-	html = html + '<p><i>%s</i></p>'%(time.ctime(TN))
-	html = html + "<p><i>Range of slices: %d%% to %d%%</i></p>" % (lowest,highest)
+	html = html + '<p><i>%s</i></p>\n'%(time.ctime(TN))
+	html = html + "<p><i>Range of slices: %d%% to %d%%</i></p>\n" % (lowest,highest)
+	html = html + '<p>Time span: %d hours, %d samples</p>\n' % (thours,len(entries))
+	html = html + '<p><b style="color: #FF3420">%d%% Overall Uptime</b></p>\n' % (allPct)	
 	html = html + "</body></html>"
 	return html
 
@@ -257,7 +258,9 @@ if len(sys.argv)>1:
 	print report_uptime(entries)
 	#print chart_uptime(entries)
 	st = time.asctime()
-	send_report(Body=report_uptime(entries),Html=chart_uptime(entries),Subject='Testing %s'%(st))
+	ht = chart_uptime(entries)
+	print ht
+	send_report(Body=report_uptime(entries),Html=ht,Subject='Testing %s'%(st))
 	# send_report(Body=report_uptime(entries),Subject='Testing 2')
 	exit()
 
