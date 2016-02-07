@@ -155,7 +155,7 @@ def chart_js_uptime(entries):
 """
 	return html
 
-def chart_uptime(entries,NumRows=28,NumCols=56):
+def chart_uptime(entries,NumRows=20,NumCols=56):
 	if len(entries) < 1:
 		return '<p>No Entries.</p>'
 	T0 = entries[0]['t']
@@ -171,14 +171,15 @@ def chart_uptime(entries,NumRows=28,NumCols=56):
 	html = html + '<p>Time span: %d hours, %d samples</p>' % (thours,len(entries))
 	html = html + '<p><b style="color: #FF3420">%d%% Uptime</b></p>' % (allPct)	
 	rowSpan = tspan/NumRows
+	html = html + '<p><i>%s</i></p>'%(time.ctime(T0))
 	html = html + '<p>'
 	lowest = 100
 	highest = 0
 	mark = '*'
 	tag = '=='
 	bgc = 'white'
+	fgc = '#9090e0'
 	for i in range(0,NumRows):
-		html = html + '<tt>|'
 		tStart = T0 + i*rowSpan
 		tEnd = tStart + rowSpan
 		sube = [e for e in entries if e['t']>=tStart and e['t']<=tEnd]
@@ -186,25 +187,24 @@ def chart_uptime(entries,NumRows=28,NumCols=56):
 			nUp = len([e for e in sube if e['c']])
 			fpct = 100 * nUp / len(sube)
 			pct = NumCols * nUp / len(sube)
-			lowest = min(lowest,fpct)
-			highest = max(highest,fpct)
 			mark = '*'
-			tag = '<i>%s (%d)</i>' % (time.ctime(tStart), len(sube))
 			bgc = '#e09090'
 		else:
 			fpct = allPct
 			pct = estPct
 			mark = '?'
-			tag = '<span style="color: #a090a0;">--</span>'
 			bgc = '#e0b0b0'
-		html = html + ('&nbsp;' * pct) + mark
+		lowest = min(lowest,fpct)
+		highest = max(highest,fpct)
+		html = html + '<span style="background-color: %s;">' %(fgc)
+		html = html + ('&nbsp;' * pct) + mark + '</span>'
 		if (pct < NumCols):
 			html = html + '<span style="background-color: %s;">' %(bgc)
 			html = html + ('&nbsp;' * (NumCols-pct))
 			html = html + '</span>'
-		html = html + '| % 3d%% </tt>' % (fpct)
-		html = html + tag + '<br />'
+		html = html + ' % 3d%% <i>(%d)</i><br/>' % (fpct,len(sube))
 	html = html + "</p>"
+	html = html + '<p><i>%s</i></p>'%(time.ctime(TN))
 	html = html + "<p><i>Range of slices: %d%% to %d%%</i></p>" % (lowest,highest)
 	html = html + "</body></html>"
 	return html
