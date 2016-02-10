@@ -22,10 +22,19 @@ class SV:
 		if self.TC >= len(self.servers):
 			self.TC = 0
 
+global machine
+machine = platform.uname()[1]
 global sv
 sv = SV()
 global logName
-logName = '%s_uptime.log' % (platform.uname()[1])
+logName = '%s_uptime.log' % (machine)
+
+global names
+names[machine] = 'R Pi'
+names['pinot3'] = 'Pi Not 3'
+names['arc'] = 'Arc Pi'
+names['blinky'] = 'Blinky Pi'
+names['rad'] = 'Rad Pi'
 
 # ######################
 
@@ -221,6 +230,8 @@ def finite_loop(Delay=10,Count=4,Target=None):
 	return n
 
 def send_report(Subject='Generic Report',Body=None,Html=None):
+	global names
+	global machine
 	bodyText = Body
 	if bodyText is None:
 		bodyText = 'Report made at %s' % (time.ctime())
@@ -228,7 +239,7 @@ def send_report(Subject='Generic Report',Body=None,Html=None):
 	if htmlText is None:
 		htmlText = '<html><body><p>%s</p></body></html>'%(bodyText)
 	msg = MIMEMultipart('mixed')
-	msg['From'] = 'Pi not 3 <kevin.bjorke@gmail.com>'
+	msg['From'] = '%s <kevin.bjorke@gmail.com>' % (names[machine])
 	msg['To'] = 'Kevin Bjorke <kevin.bjorke@gmail.com>'
 	msg['Subject'] = Subject
 	msg.preamble = 'weird why would you see this?'
@@ -257,7 +268,7 @@ if len(sys.argv)>1:
 	st = time.asctime()
 	bt = report_uptime(entries)
 	ht = chart_uptime(entries)
-	send_report(Body=bt,Html=ht,Subject='Connectivity Report %s'%(st))
+	send_report(Body=bt,Html=ht,Subject='Connectivity Report %s %s'%(machine,st))
 	exit()
 
 if __name__ == '__main__':
