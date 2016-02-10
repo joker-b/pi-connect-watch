@@ -30,6 +30,7 @@ global logName
 logName = '%s_uptime.log' % (machine)
 
 global names
+names = {}
 names[machine] = 'R Pi'
 names['pinot3'] = 'Pi Not 3'
 names['arc'] = 'Arc Pi'
