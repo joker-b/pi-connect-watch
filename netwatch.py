@@ -166,7 +166,7 @@ def chart_js_uptime(entries):
 """
 	return html
 
-def chart_uptime(entries,NumRows=30,NumCols=64):
+def chart_uptime(entries,NumRows=30,NumCols=40):
 	if len(entries) < 1:
 		return '<p>No Entries.</p>'
 	T0 = entries[0]['t']
