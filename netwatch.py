@@ -41,7 +41,7 @@ global gReportTimer
 gReportTimer = 0
 global gReportInterval
 gReportInterval = 3600*24*7 # seven days, in seconds
-gReportInterval = 3600*24 # one day, in seconds
+# gReportInterval = 3600*24 # one day, in seconds
 
 # ######################
 
