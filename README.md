@@ -1,5 +1,4 @@
-pi-netwatch
-=====
+# pi-netwatch
 
 regularly ping common public servers. Keep a log of success or failure. Periodically send an email report describing the connectivity situation.
 
@@ -15,7 +14,7 @@ On pi2's you may need to use `sudo`:
 
 Running the command will give you a hint if this is needed
 
-Immediate Report
+## Immediate Reporting
 ==
 
 `python netwatch.py _logfile_name_`
@@ -28,14 +27,13 @@ Or
 
 to use the default logfile name, with a report named "now"
 
-Suggested Pi Usage
-==
+## Suggested Pi Automated Usage
 
 put this into `rc.local` to start reporting on reboot for a typical pi:
 
 ```
-python /home/pi/src/pi-connect-watch reboot
-python /home/pi/src/pi-connect-watch &
+python /home/pi/src/pi-connect-watch/netwatch.py &
+python /home/pi/src/pi-connect-watch/netwatch.py reboot
 ```
 
 
