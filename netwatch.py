@@ -36,16 +36,20 @@ names['pinot3'] = 'Pi Not 3'
 names['arc'] = 'Arc Pi'
 names['blinky'] = 'Blinky Pi'
 names['rad'] = 'Rad Pi'
+names['new3'] = 'The New 3'
 
 global gReportTimer
-gReportTimer = 0
 global gReportInterval
+global gNotifyFirstTime
+gReportTimer = 0
 gReportInterval = 3600*24*7 # seven days, in seconds
 # gReportInterval = 3600*24 # one day, in seconds
+gNotifyFirstTime = True
 
 # ######################
 
 def connected(Target=None):
+  global gNotifyFirstTime
   target=Target 
   if Target is None:
     target = sv.server()
@@ -65,6 +69,9 @@ def connected(Target=None):
   print "%s: result was %d for %s" % (time.asctime(),result,target)
   if result == 2:
     sv.rotate()
+    if gNotifyFirstTime:
+      print "You may need to use sudo to run this program"
+  gNotifyFirstTime = False
   return (result != 2)
 
 def endless_logging(Delay=10,Variance=3,Target=None):
@@ -76,9 +83,13 @@ def endless_logging(Delay=10,Variance=3,Target=None):
     c = connected(Target=Target)
     if not c:
       t = -t
-    fp = open(gLogName,'a')
-    fp.write('%d\n'%(t))
-    fp.close()
+    try:
+      fp = open(gLogName,'a')
+      fp.write('%d\n'%(t))
+      fp.close()
+    except:
+      print "Unable to write to logfile '%s'!!!!" % (gLogName)
+      return # not so endless
     d = Delay
     if Variance != 0:
       d = d + random.randint(-Variance,Variance)

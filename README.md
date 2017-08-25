@@ -7,7 +7,16 @@ to run:
 
 `python netwatch.py`
 
-and it will send reports every seven days
+and it will send reports every seven days.
+
+On pi2's you may need to use `sudo`:
+
+`sudo python netwatch.py`
+
+Running the command will give you a hint if this is needed
+
+Immediate Report
+==
 
 `python netwatch.py logfile_name`
 
