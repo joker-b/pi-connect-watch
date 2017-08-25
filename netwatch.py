@@ -90,6 +90,7 @@ def endless_logging(Delay=10,Variance=3,Target=None):
 
 def read_log(LogFile=None,Start=None):
   global gLogName
+  global gReportInterval
   entries = []
   if LogFile is not None:
     if os.path.exists(LogFile):
@@ -101,7 +102,7 @@ def read_log(LogFile=None,Start=None):
     return entries
   now = time.time()
   if Start is None:
-    logStart = now - (3600*24*7)   # one week back
+    logStart = now - gReportInterval
   else:
     logStart = Start
   fp = open(gLogName,'r')
@@ -109,17 +110,20 @@ def read_log(LogFile=None,Start=None):
     fl = fp.readline()
     if fl == "":
       break
-    fv = float(fl)
-    up = (fv >= 0.0)
-    fv = abs(fv)
-    if fv >= logStart:
-      entries.append({'t':fv, 'c': up})
+    try:
+      fv = float(fl)
+      up = (fv >= 0.0)
+      fv = abs(fv)
+      if fv >= logStart:
+	entries.append({'t':fv, 'c': up})
+    except:
+      print "Bad number value '%s' ignored" % (fl)
   fp.close()
   return entries
 
 def report_uptime(entries):
   if len(entries) < 1:
-    return "No log entries"
+    return "No log entries for designated interval"
   T0 = entries[0]['t']
   if len(entries) < 2:
     return 'Time %s: %s' % (time.ctime(T0), entries[0]['c'])
