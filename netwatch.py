@@ -8,6 +8,7 @@ import platform
 import math
 import random
 import inspect
+import getpass
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -26,15 +27,17 @@ class PingService:
 def getScriptPath():
   filename = inspect.getframeinfo(inspect.currentframe()).filename
   dir = os.path.dirname(os.path.abspath(filename))
-  print "Script and Data from '%s'" % (dir)
+  print "Data in '%s'" % (dir)
   return dir
 
 global machine
 global gPingService
+global gUserName
 global gScriptPath
 global gLogFileName
 machine = platform.uname()[1]
 gPingService = PingService()
+gUserName = getpass.getuser()
 gScriptPath = getScriptPath()
 gLogFileName = os.path.join(gScriptPath,'%s_uptime.log' % (machine))
 
@@ -68,13 +71,16 @@ def connected(Target=None):
     cmd = 'ping -n 2 -w 1 %s'%(target)
   else:
     cmd = 'ping -c 2 -w 1 %s'%(target)
-  if 'Windows' in platform.uname():
-    dnull = open('junk.txt','w')
-  else:
-    #dnull = open('biglog.log','a')
-    dnull = open('/dev/null','w')
-  result = sp.call(cmd.split(),shell=False,stderr=sp.STDOUT,stdout=dnull)
-  dnull.close()
+  try:
+    if 'Windows' in platform.uname():
+      dnull = open('junk.txt','w')
+    else:
+      dnull = open('/dev/null','w')
+    result = sp.call(cmd.split(),shell=False,stderr=sp.STDOUT,stdout=dnull)
+    dnull.close()
+  except:
+    print "null open failure"
+    return False
   print "%s: result was %d for %s" % (time.asctime(),result,target)
   if result == 2:
     gPingService.rotate()
@@ -125,7 +131,11 @@ def read_log(LogFile=None,Start=None):
     logStart = now - gReportInterval
   else:
     logStart = Start
-  fp = open(gLogFileName,'r')
+  try:
+    fp = open(gLogFileName,'r')
+  except:
+    print "Cannot open log '%s'" % (gLogFileName)
+    return entries
   while True:
     fl = fp.readline()
     if fl == "":
@@ -269,6 +279,7 @@ def finite_loop(Delay=10,Count=4,Target=None):
   return n
 
 def send_report(Subject='Generic Report',Body=None,Html=None):
+  global gUserName
   global names
   global machine
   bodyText = Body
@@ -278,7 +289,7 @@ def send_report(Subject='Generic Report',Body=None,Html=None):
   if htmlText is None:
     htmlText = '<html><body><p>%s</p></body></html>'%(bodyText)
   msg = MIMEMultipart('mixed')
-  msg['From'] = '%s <kevin.bjorke@gmail.com>' % (names[machine])
+  msg['From'] = '%s %s <kevin.bjorke@gmail.com>' % (names[machine],gUserName)
   msg['To'] = 'Kevin Bjorke <kevin.bjorke@gmail.com>'
   msg['Subject'] = Subject
   msg.preamble = 'weird why would you see this?'
@@ -293,7 +304,7 @@ def send_report(Subject='Generic Report',Body=None,Html=None):
     s.sendmail('kevin.bjorke@gmail.com', 'kevin.bjorke@gmail.com', msg.as_string())
     s.quit()
   except:
-    print "Connection Error"
+    print "Sendmail Connection Error"
     return False
   return True
 
