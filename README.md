@@ -18,6 +18,25 @@ Running the command will give you a hint if this is needed
 Immediate Report
 ==
 
-`python netwatch.py logfile_name`
+`python netwatch.py _logfile_name_`
 
-will send a report based on `logfile_name` immediately
+will send a report based on `_logfile_name_` immediately.
+
+Or 
+
+`python netwatch.py now`
+
+to use the default logfile name, with a report named "now"
+
+Suggested Pi Usage
+==
+
+put this into `rc.local` to start reporting on reboot for a typical pi:
+
+```
+python /home/pi/src/pi-connect-watch reboot
+python /home/pi/src/pi-connect-watch &
+```
+
+
+

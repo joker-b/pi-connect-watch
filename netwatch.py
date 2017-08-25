@@ -7,11 +7,12 @@ import time
 import platform
 import math
 import random
+import inspect
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-class SV:
+class PingService:
   TC=0
   servers = ['google.com','linkedin.com','yahoo.com']
   def server(self):
@@ -22,12 +23,20 @@ class SV:
     if self.TC >= len(self.servers):
       self.TC = 0
 
+def getScriptPath():
+  filename = inspect.getframeinfo(inspect.currentframe()).filename
+  dir = os.path.dirname(os.path.abspath(filename))
+  print "Script and Data from '%s'" % (dir)
+  return dir
+
 global machine
+global gPingService
+global gScriptPath
+global gLogFileName
 machine = platform.uname()[1]
-global sv
-sv = SV()
-global gLogName
-gLogName = '%s_uptime.log' % (machine)
+gPingService = PingService()
+gScriptPath = getScriptPath()
+gLogFileName = os.path.join(gScriptPath,'%s_uptime.log' % (machine))
 
 global names
 names = {}
@@ -52,7 +61,7 @@ def connected(Target=None):
   global gNotifyFirstTime
   target=Target 
   if Target is None:
-    target = sv.server()
+    target = gPingService.server()
   if 'Darwin' in platform.system():
     cmd = 'ping -c 2 -W 1 %s'%(target)
   elif 'Windows' in platform.uname():
@@ -68,14 +77,14 @@ def connected(Target=None):
   dnull.close()
   print "%s: result was %d for %s" % (time.asctime(),result,target)
   if result == 2:
-    sv.rotate()
+    gPingService.rotate()
     if gNotifyFirstTime:
       print "You may need to use sudo to run this program"
   gNotifyFirstTime = False
   return (result != 2)
 
 def endless_logging(Delay=10,Variance=3,Target=None):
-  global gLogName
+  global gLogFileName
   global gReportTimer
   global gReportInterval
   while True:
@@ -84,11 +93,11 @@ def endless_logging(Delay=10,Variance=3,Target=None):
     if not c:
       t = -t
     try:
-      fp = open(gLogName,'a')
+      fp = open(gLogFileName,'a')
       fp.write('%d\n'%(t))
       fp.close()
     except:
-      print "Unable to write to logfile '%s'!!!!" % (gLogName)
+      print "Unable to write to logfile '%s'!!!!" % (gLogFileName)
       return # not so endless
     d = Delay
     if Variance != 0:
@@ -100,23 +109,23 @@ def endless_logging(Delay=10,Variance=3,Target=None):
         gReportTimer = 0
 
 def read_log(LogFile=None,Start=None):
-  global gLogName
+  global gLogFileName
   global gReportInterval
   entries = []
   if LogFile is not None:
     if os.path.exists(LogFile):
-      gLogName = LogFile
+      gLogFileName = LogFile
     else:
-      print 'No file "%s" so using "%s"' % (LogFile,gLogName)
-  if not os.path.exists(gLogName):
-    print 'log unavailable'
+      print 'Reading log "%s"' % (gLogFileName)
+  if not os.path.exists(gLogFileName):
+    print 'log unavailable for reading'
     return entries
   now = time.time()
   if Start is None:
     logStart = now - gReportInterval
   else:
     logStart = Start
-  fp = open(gLogName,'r')
+  fp = open(gLogFileName,'r')
   while True:
     fl = fp.readline()
     if fl == "":
@@ -143,7 +152,7 @@ def report_uptime(entries):
   thours = max(1,int(math.floor((tspan/3600.0))))
   report = 'Time span: %d hours, %d samples' % (thours,len(entries))
   nUp = len([e for e in entries if e['c']])
-  report = report + '\n%d%% Uptime' % (100*nUp/len(entries))
+  report = report + ', %d%% Uptime' % (100*nUp/len(entries))
   return report
 
 def chart_js_uptime(entries):
@@ -296,12 +305,15 @@ def old_test():
     print 'got %d of %d success on %s' % (r,ct,trg)
 
 def create_all_reports(LogFile=None):
+  reportName = LogFile
+  if reportName is None or os.path.exists(reportName):
+      reportName = "Standard"
   entries = read_log(LogFile)
   print report_uptime(entries)
   st = time.asctime()
   bt = report_uptime(entries)
   ht = chart_uptime(entries)
-  return send_report(Body=bt,Html=ht,Subject='Connectivity Report %s %s'%(machine,st))
+  return send_report(Body=bt,Html=ht,Subject='Connectivity Report: %s %s %s'%(reportName,machine,st))
 
 #############
 
