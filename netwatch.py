@@ -85,8 +85,8 @@ def endless_logging(Delay=10,Variance=3,Target=None):
     time.sleep(d)
     gReportTimer = gReportTimer+d
     if gReportTimer >= gReportInterval:
-      gReportTimer = 0
-      create_all_reports()
+      if create_all_reports():
+        gReportTimer = 0
 
 def read_log(LogFile=None,Start=None):
   global gLogName
@@ -264,9 +264,14 @@ def send_report(Subject='Generic Report',Body=None,Html=None):
   alt.attach(mbody)
   alt.attach(mhtml)
   msg.attach(alt)
-  s = smtplib.SMTP('localhost')
-  s.sendmail('kevin.bjorke@gmail.com', 'kevin.bjorke@gmail.com', msg.as_string())
-  s.quit()
+  try:
+    s = smtplib.SMTP('localhost')
+    s.sendmail('kevin.bjorke@gmail.com', 'kevin.bjorke@gmail.com', msg.as_string())
+    s.quit()
+  except:
+    print "Connection Error"
+    return False
+  return True
 
 def old_test():
   ct=2
@@ -281,7 +286,7 @@ def create_all_reports(LogFile=None):
   st = time.asctime()
   bt = report_uptime(entries)
   ht = chart_uptime(entries)
-  send_report(Body=bt,Html=ht,Subject='Connectivity Report %s %s'%(machine,st))
+  return send_report(Body=bt,Html=ht,Subject='Connectivity Report %s %s'%(machine,st))
 
 #############
 
