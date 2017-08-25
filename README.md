@@ -15,17 +15,16 @@ On pi2's you may need to use `sudo`:
 Running the command will give you a hint if this is needed
 
 ## Immediate Reporting
-==
 
-`python netwatch.py _logfile_name_`
-
-will send a report based on `_logfile_name_` immediately.
-
-Or 
+Netwatch.py will generate report emails every few days. If you're impatient, try
 
 `python netwatch.py now`
 
 to use the default logfile name, with a report named "now"
+
+to use a specific logfile name, use the logfile instead of the report name, e.g.
+
+`python netwatch.py _logfile_name_`
 
 ## Suggested Pi Automated Usage
 
