@@ -103,8 +103,9 @@ class NetWatch:
       time.sleep(sleepTime)
       self.reportTimer = self.reportTimer+sleepTime
       if self.reportTimer >= self.firstReportDelay and not self.initialReportComplete:
-        if create_all_reports("Statup"):
-          self.initialReportComplete = True
+        if not create_all_reports("Startup"):
+	  print "initial report failed?"
+	self.initialReportComplete = True
       if self.reportTimer >= self.reportInterval:
         if create_all_reports():
           self.reportTimer = 0
