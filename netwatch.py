@@ -97,17 +97,20 @@ class NetWatch:
       except:
         print "Unable to write to logfile '%s' at time %d" % (self.logFileName, now)
         return # not so endless
+      print "logged at %d (%d, %d)" % (self.reportTimer, self.firstReportDelay, self.reportInterval)
       sleepTime = Delay
       if Variance != 0:
         sleepTime = sleepTime + random.randint(-Variance,Variance)
       time.sleep(sleepTime)
       self.reportTimer = self.reportTimer+sleepTime
       if self.reportTimer >= self.firstReportDelay and not self.initialReportComplete:
-        if not create_all_reports("Startup"):
+        if self.create_all_reports("Startup"):
 	  print "initial report failed?"
-	self.initialReportComplete = True
+	else:
+	  print "initial report sent"
+	  self.initialReportComplete = True
       if self.reportTimer >= self.reportInterval:
-        if create_all_reports():
+        if self.create_all_reports():
           self.reportTimer = 0
 
   def read_log(self,LogFile=None,Start=None):
