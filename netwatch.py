@@ -24,158 +24,151 @@ class PingService:
     if self.TC >= len(self.servers):
       self.TC = 0
 
-def getScriptPath():
-  filename = inspect.getframeinfo(inspect.currentframe()).filename
-  dir = os.path.dirname(os.path.abspath(filename))
-  print "Data in '%s'" % (dir)
-  return dir
+# #################
 
-global machine
-global gPingService
-global gUserName
-global gScriptPath
-global gLogFileName
-machine = platform.uname()[1]
-gPingService = PingService()
-gUserName = getpass.getuser()
-gScriptPath = getScriptPath()
-gLogFileName = os.path.join(gScriptPath,'%s_uptime.log' % (machine))
+class NetWatch:
+  machine = platform.uname()[1]
+  pingService = PingService()
+  firstReportDelay = 600 # ten minutes, in seconds
+  reportInterval = 3600*24*7 # seven days, in seconds
+  def __init__(self):
+    self.userName = getpass.getuser()
+    self.initEmailNames()
+    self.initScriptPath()
+    self.logFileName = os.path.join(self.scriptPath,'%s_uptime.log' % (self.machine))
+    self.reportTimer = 0
+    self.notifyFirstTime = True
+    self.initialReportComplete = False
 
-global names
-names = {}
-names[machine] = 'R Pi'
-names['pinot3'] = 'Pi Not 3'
-names['arc'] = 'Arc Pi'
-names['blinky'] = 'Blinky Pi'
-names['rad'] = 'Rad Pi'
-names['new3'] = 'The New 3'
+  def initEmailNames(self):
+    self.names = {}
+    self.names[self.machine] = 'R Pi' # may be overwritten in the list below
+    self.names['pinot3'] = 'Pi Not 3'
+    self.names['arc'] = 'Arc Pi',
+    self.names['blinky'] = 'Blinky Pi'
+    self.names['rad'] = 'Rad Pi'
+    self.names['new3'] = 'The New 3'
 
-global gReportTimer
-global gReportInterval
-global gNotifyFirstTime
-gReportTimer = 0
-gReportInterval = 3600*24*7 # seven days, in seconds
-# gReportInterval = 3600*24 # one day, in seconds
-gNotifyFirstTime = True
+  def initScriptPath(self):
+    filename = inspect.getframeinfo(inspect.currentframe()).filename
+    dir = os.path.dirname(os.path.abspath(filename))
+    print "Data in '%s'" % (dir)
+    self.scriptPath = dir
 
-# ######################
+  # ######################
 
-def connected(Target=None):
-  global gNotifyFirstTime
-  target=Target 
-  if Target is None:
-    target = gPingService.server()
-  if 'Darwin' in platform.system():
-    cmd = 'ping -c 2 -W 1 %s'%(target)
-  elif 'Windows' in platform.uname():
-    cmd = 'ping -n 2 -w 1 %s'%(target)
-  else:
-    cmd = 'ping -c 2 -w 1 %s'%(target)
-  try:
-    if 'Windows' in platform.uname():
-      dnull = open('junk.txt','w')
+  def connected(self,Target=None):
+    target=Target 
+    if Target is None:
+      target = self.pingService.server()
+    if 'Darwin' in platform.system():
+      cmd = 'ping -c 2 -W 1 %s'%(target)
+    elif 'Windows' in platform.uname():
+      cmd = 'ping -n 2 -w 1 %s'%(target)
     else:
-      dnull = open('/dev/null','w')
-    result = sp.call(cmd.split(),shell=False,stderr=sp.STDOUT,stdout=dnull)
-    dnull.close()
-  except:
-    print "null open failure"
-    return False
-  print "%s: result was %d for %s" % (time.asctime(),result,target)
-  if result == 2:
-    gPingService.rotate()
-    if gNotifyFirstTime:
-      print "You may need to use sudo to run this program"
-  gNotifyFirstTime = False
-  return (result != 2)
-
-def endless_logging(Delay=10,Variance=3,Target=None):
-  global gLogFileName
-  global gReportTimer
-  global gReportInterval
-  while True:
-    t = time.time()
-    c = connected(Target=Target)
-    if not c:
-      t = -t
+      cmd = 'ping -c 2 -w 1 %s'%(target)
     try:
-      fp = open(gLogFileName,'a')
-      fp.write('%d\n'%(t))
-      fp.close()
+      if 'Windows' in platform.uname():
+        dnull = open('junk.txt','w')
+      else:
+        dnull = open('/dev/null','w')
+      result = sp.call(cmd.split(),shell=False,stderr=sp.STDOUT,stdout=dnull)
+      dnull.close()
     except:
-      print "Unable to write to logfile '%s'!!!!" % (gLogFileName)
-      return # not so endless
-    d = Delay
-    if Variance != 0:
-      d = d + random.randint(-Variance,Variance)
-    time.sleep(d)
-    gReportTimer = gReportTimer+d
-    if gReportTimer >= gReportInterval:
-      if create_all_reports():
-        gReportTimer = 0
+      print "null open failure"
+      return False
+    print "%s: result was %d for %s" % (time.asctime(),result,target)
+    if result == 2:
+      self.pingService.rotate()
+      if self.notifyFirstTime:
+        print "You may need to use sudo to run this program"
+    self.notifyFirstTime = False
+    return (result != 2)
 
-def read_log(LogFile=None,Start=None):
-  global gLogFileName
-  global gReportInterval
-  entries = []
-  if LogFile is not None:
-    if os.path.exists(LogFile):
-      gLogFileName = LogFile
+  def endless_logging(self,Delay=10,Variance=3,Target=None):
+    while True:
+      now = time.time()
+      if not self.connected(Target=Target):
+        now = -now
+      try:
+        fp = open(self.logFileName,'a')
+        fp.write('%d\n'%(now))
+        fp.close()
+      except:
+        print "Unable to write to logfile '%s' at time %d" % (self.logFileName, now)
+        return # not so endless
+      sleepTime = Delay
+      if Variance != 0:
+        sleepTime = sleepTime + random.randint(-Variance,Variance)
+      time.sleep(sleepTime)
+      self.reportTimer = self.reportTimer+sleepTime
+      if self.reportTimer >= self.firstReportDelay and not self.initialReportComplete:
+        if create_all_reports("Statup"):
+          self.initialReportComplete = True
+      if self.reportTimer >= self.reportInterval:
+        if create_all_reports():
+          self.reportTimer = 0
+
+  def read_log(self,LogFile=None,Start=None):
+    entries = []
+    if LogFile is not None:
+      if os.path.exists(LogFile):
+        self.logFileName = LogFile
+      else:
+        print 'Reading log "%s"' % (self.logFileName)
+    if not os.path.exists(self.logFileName):
+      print 'log unavailable for reading'
+      return entries
+    now = time.time()
+    if Start is None:
+      logStart = now - self.reportInterval
     else:
-      print 'Reading log "%s"' % (gLogFileName)
-  if not os.path.exists(gLogFileName):
-    print 'log unavailable for reading'
-    return entries
-  now = time.time()
-  if Start is None:
-    logStart = now - gReportInterval
-  else:
-    logStart = Start
-  try:
-    fp = open(gLogFileName,'r')
-  except:
-    print "Cannot open log '%s'" % (gLogFileName)
-    return entries
-  while True:
-    fl = fp.readline()
-    if fl == "":
-      break
+      logStart = Start
     try:
-      fv = float(fl)
-      up = (fv >= 0.0)
-      fv = abs(fv)
-      if fv >= logStart:
-	entries.append({'t':fv, 'c': up})
+      fp = open(self.logFileName,'r')
     except:
-      print "Bad number value '%s' ignored" % (fl)
-  fp.close()
-  return entries
+      print "Cannot open log '%s'" % (self.logFileName)
+      return entries
+    while True:
+      fl = fp.readline()
+      if fl == "":
+        break
+      try:
+        fv = float(fl)
+        up = (fv >= 0.0)
+        fv = abs(fv)
+        if fv >= logStart:
+          entries.append({'t':fv, 'c': up})
+      except:
+        print "Bad number value '%s' ignored" % (fl)
+    fp.close()
+    return entries
 
-def report_uptime(entries):
-  if len(entries) < 1:
-    return "No log entries for designated interval"
-  T0 = entries[0]['t']
-  if len(entries) < 2:
-    return 'Time %s: %s' % (time.ctime(T0), entries[0]['c'])
-  TN = entries[len(entries)-1]['t']
-  tspan = TN-T0
-  thours = max(1,int(math.floor((tspan/3600.0))))
-  report = 'Time span: %d hours, %d samples' % (thours,len(entries))
-  nUp = len([e for e in entries if e['c']])
-  report = report + ', %d%% Uptime' % (100*nUp/len(entries))
-  return report
+  def report_uptime(self,entries):
+    if len(entries) < 1:
+      return "No log entries for designated interval"
+    T0 = entries[0]['t']
+    if len(entries) < 2:
+      return 'Time %s: %s' % (time.ctime(T0), entries[0]['c'])
+    TN = entries[len(entries)-1]['t']
+    tspan = TN-T0
+    thours = max(1,int(math.floor((tspan/3600.0))))
+    report = 'Time span: %d hours, %d samples' % (thours,len(entries))
+    nUp = len([e for e in entries if e['c']])
+    report = report + ', %d%% Uptime' % (100*nUp/len(entries))
+    return report
 
-def chart_js_uptime(entries):
-  if len(entries) < 1:
-    return '<p>No Entries.</p>'
-  T0 = entries[0]['t']
-  if len(entries) < 2:
-    return 'Time %s: %s' % (time.ctime(T0), entries[0]['c'])
-  TN = entries[len(entries)-1]['t']
-  tspan = TN-T0
-  thours = max(1,int(math.floor((tspan/3600.0))))
-  nUp = len([e for e in entries if e['c']])
-  html = """
+  def chart_js_uptime(self,entries):
+    if len(entries) < 1:
+      return '<p>No Entries.</p>'
+    T0 = entries[0]['t']
+    if len(entries) < 2:
+      return 'Time %s: %s' % (time.ctime(T0), entries[0]['c'])
+    TN = entries[len(entries)-1]['t']
+    tspan = TN-T0
+    thours = max(1,int(math.floor((tspan/3600.0))))
+    nUp = len([e for e in entries if e['c']])
+    html = """
 <html><head>
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
@@ -184,9 +177,9 @@ def chart_js_uptime(entries):
       function drawChart() {
         var data = google.visualization.arrayToDataTable([
           ['Time', 'Status'],
- """
-  html = html + ',\n'.join(['[%d,%d]'%(e['t'],((0+e['c']))) for e in entries])
-  html = html + """]);
+"""
+    html = html + ',\n'.join(['[%d,%d]'%(e['t'],((0+e['c']))) for e in entries])
+    html = html + """]);
         var options = {
           title: 'Uptime over %d hours',
           hAxis: {title: 'Time'},
@@ -199,9 +192,9 @@ def chart_js_uptime(entries):
     </script>
     </head><body>
 """ % (thours)
-  html = html + '<p>Time span: %d hours, %d samples</p>' % (thours,len(entries))
-  html = html + '<p><b style="color: #FF3420">%d%% Uptime</b></p>' % (100*nUp/len(entries))  
-  html = html + """
+    html = html + '<p>Time span: %d hours, %d samples</p>' % (thours,len(entries))
+    html = html + '<p><b style="color: #FF3420">%d%% Uptime</b></p>' % (100*nUp/len(entries))  
+    html = html + """
     <div>
     <h3>Chart:</h3>
     <div id="chart_div" style="width: 900px; height: 500px;"></div>
@@ -210,132 +203,130 @@ def chart_js_uptime(entries):
 </body>
 </html>
 """
-  return html
+    return html
 
-def chart_uptime(entries,NumRows=30,NumCols=40):
-  if len(entries) < 1:
-    return '<p>No Entries.</p>'
-  T0 = entries[0]['t']
-  if len(entries) < 2:
-    return 'Time %s: %s' % (time.ctime(T0), entries[0]['c'])
-  TN = entries[len(entries)-1]['t']
-  tspan = TN-T0
-  thours = max(1,int(math.floor((tspan/3600.0))))
-  nUp = len([e for e in entries if e['c']])
-  allPct = 100*nUp/len(entries)
-  estPct = NumCols*nUp/len(entries)
-  html = "<html><body>"
-  rowSpan = tspan/NumRows
-  html = html + '<p><i>Start: %s</i><br/>\n'%(time.ctime(T0))
-  lowest = 100
-  highest = 0
-  mark = '*'
-  tag = '=='
-  bgc = 'white'
-  fgc = '#b0e0b0'
-  for i in range(0,NumRows):
-    tStart = T0 + i*rowSpan
-    tEnd = tStart + rowSpan
-    sube = [e for e in entries if e['t']>=tStart and e['t']<=tEnd]
-    if len(sube) > 0:
-      nUp = len([e for e in sube if e['c']])
-      fpct = 100 * nUp / len(sube)
-      pct = NumCols * nUp / len(sube)
-      mark = '*'
-      bgc = '#e09090'
-    else:
-      fpct = allPct
-      pct = estPct
-      mark = '*'
-      bgc = '#e0c0b0'
-    lowest = min(lowest,fpct)
-    highest = max(highest,fpct)
-    html = html + '<span style="background-color: %s;">' %(fgc)
-    html = html + ('&nbsp;' * pct) + mark + '</span>'
-    if (pct < NumCols):
-      html = html + '<span style="background-color: %s;">' %(bgc)
-      html = html + ('&nbsp;' * (NumCols-pct))
-      html = html + '</span>'
-    html = html + ' % 3d%%<br/>\n' % (fpct)
-  html = html + '<i>End: %s</i></p>\n'%(time.ctime(TN))
-  html = html + "<p><i>Connectivity Range: %d%% to %d%%</i><br/>\n" % (lowest,highest)
-  html = html + 'across %d hours (%d samples)</p>\n' % (thours,len(entries))
-  html = html + '<p><b style="color: #FF3420">%d%% Overall Uptime</b></p>\n' % (allPct)  
-  html = html + "</body></html>"
-  return html
+  def chart_uptime(self,entries,NumRows=30,NumCols=40):
+    if len(entries) < 1:
+      return '<p>No Entries.</p>'
+    T0 = entries[0]['t']
+    if len(entries) < 2:
+      return 'Time %s: %s' % (time.ctime(T0), entries[0]['c'])
+    TN = entries[len(entries)-1]['t']
+    tspan = TN-T0
+    thours = max(1,int(math.floor((tspan/3600.0))))
+    nUp = len([e for e in entries if e['c']])
+    allPct = 100*nUp/len(entries)
+    estPct = NumCols*nUp/len(entries)
+    html = "<html><body>"
+    rowSpan = tspan/NumRows
+    html = html + '<p><i>Start: %s</i><br/>\n'%(time.ctime(T0))
+    lowest = 100
+    highest = 0
+    mark = '*'
+    tag = '=='
+    bgc = 'white'
+    fgc = '#b0e0b0'
+    for i in range(0,NumRows):
+      tStart = T0 + i*rowSpan
+      tEnd = tStart + rowSpan
+      sube = [e for e in entries if e['t']>=tStart and e['t']<=tEnd]
+      if len(sube) > 0:
+        nUp = len([e for e in sube if e['c']])
+        fpct = 100 * nUp / len(sube)
+        pct = NumCols * nUp / len(sube)
+        mark = '*'
+        bgc = '#e09090'
+      else:
+        fpct = allPct
+        pct = estPct
+        mark = '*'
+        bgc = '#e0c0b0'
+      lowest = min(lowest,fpct)
+      highest = max(highest,fpct)
+      html = html + '<span style="background-color: %s;">' %(fgc)
+      html = html + ('&nbsp;' * pct) + mark + '</span>'
+      if (pct < NumCols):
+        html = html + '<span style="background-color: %s;">' %(bgc)
+        html = html + ('&nbsp;' * (NumCols-pct))
+        html = html + '</span>'
+      html = html + ' % 3d%%<br/>\n' % (fpct)
+    html = html + '<i>End: %s</i></p>\n'%(time.ctime(TN))
+    html = html + "<p><i>Connectivity Range: %d%% to %d%%</i><br/>\n" % (lowest,highest)
+    html = html + 'across %d hours (%d samples)</p>\n' % (thours,len(entries))
+    html = html + '<p><b style="color: #FF3420">%d%% Overall Uptime</b></p>\n' % (allPct)  
+    html = html + "</body></html>"
+    return html
 
-#######
+  #######
 
-def finite_loop(Delay=10,Count=4,Target=None):
-  n = 0
-  global gReportTimer
-  for i in range(0,Count):
-    c = connected(Target=Target)
-    if c == 0:
-      n += 1
-    if i < (Count-1):
-      time.sleep(Delay)
-      gReportTimer = gReportTimer+Delay
-  return n
+  def finite_loop(self,Delay=10,Count=4,Target=None):
+    n = 0
+    for i in range(0,Count):
+      c = self.connected(Target=Target)
+      if c == 0:
+        n += 1
+      if i < (Count-1):
+        time.sleep(Delay)
+        self.reportTimer = self.reportTimer+Delay
+    return n
 
-def send_report(Subject='Generic Report',Body=None,Html=None):
-  global gUserName
-  global names
-  global machine
-  bodyText = Body
-  if bodyText is None:
-    bodyText = 'Report made at %s' % (time.ctime())
-  htmlText = Html
-  if htmlText is None:
-    htmlText = '<html><body><p>%s</p></body></html>'%(bodyText)
-  msg = MIMEMultipart('mixed')
-  msg['From'] = '%s %s <kevin.bjorke@gmail.com>' % (names[machine],gUserName)
-  msg['To'] = 'Kevin Bjorke <kevin.bjorke@gmail.com>'
-  msg['Subject'] = Subject
-  msg.preamble = 'weird why would you see this?'
-  alt = MIMEMultipart('alternative')
-  mbody = MIMEText(bodyText,'plain')
-  mhtml = MIMEText(htmlText,'html')
-  alt.attach(mbody)
-  alt.attach(mhtml)
-  msg.attach(alt)
-  try:
-    s = smtplib.SMTP('localhost')
-    s.sendmail('kevin.bjorke@gmail.com', 'kevin.bjorke@gmail.com', msg.as_string())
-    s.quit()
-  except:
-    print "Sendmail Connection Error"
-    return False
-  return True
+  def send_report(self,Subject='Generic Report',Body=None,Html=None):
+    bodyText = Body
+    if bodyText is None:
+      bodyText = 'Report made at %s' % (time.ctime())
+    htmlText = Html
+    if htmlText is None:
+      htmlText = '<html><body><p>%s</p></body></html>'%(bodyText)
+    msg = MIMEMultipart('mixed')
+    msg['From'] = '%s %s <kevin.bjorke@gmail.com>' % (self.names[self.machine],self.userName)
+    msg['To'] = 'Kevin Bjorke <kevin.bjorke@gmail.com>'
+    msg['Subject'] = Subject
+    msg.preamble = 'weird why would you see this?'
+    alt = MIMEMultipart('alternative')
+    mbody = MIMEText(bodyText,'plain')
+    mhtml = MIMEText(htmlText,'html')
+    alt.attach(mbody)
+    alt.attach(mhtml)
+    msg.attach(alt)
+    try:
+      s = smtplib.SMTP('localhost')
+      s.sendmail('kevin.bjorke@gmail.com', 'kevin.bjorke@gmail.com', msg.as_string())
+      s.quit()
+    except:
+      print "Sendmail Connection Error"
+      return False
+    return True
 
-def old_test():
-  ct=2
-  for trg in ['linkedin.com','liynksdasygdgs.org',None]:
-    print "checking again '%s'..." % (trg)
-    r = finite_loop(Delay=3,Count=ct,Target=trg)
-    print 'got %d of %d success on %s' % (r,ct,trg)
+  def old_test(self):
+    ct=2
+    for trg in ['linkedin.com','liynksdasygdgs.org',None]:
+      print "checking again '%s'..." % (trg)
+      r = self.finite_loop(Delay=3,Count=ct,Target=trg)
+      print 'got %d of %d success on %s' % (r,ct,trg)
 
-def create_all_reports(LogFile=None):
-  reportName = LogFile
-  if reportName is None or os.path.exists(reportName):
-      reportName = "Standard"
-  entries = read_log(LogFile)
-  print report_uptime(entries)
-  st = time.asctime()
-  bt = report_uptime(entries)
-  ht = chart_uptime(entries)
-  return send_report(Body=bt,Html=ht,Subject='Connectivity Report: %s %s %s'%(reportName,machine,st))
+  def create_all_reports(self,LogFile=None):
+    reportName = LogFile
+    if reportName is None or os.path.exists(reportName):
+        reportName = "Standard"
+    entries = self.read_log(LogFile)
+    print self.report_uptime(entries)
+    st = time.asctime()
+    bt = self.report_uptime(entries)
+    ht = self.chart_uptime(entries)
+    return self.send_report(Body=bt,Html=ht,Subject='Connectivity Report: %s %s %s'%(reportName,self.machine,st))
 
 #############
 
+watcher = NetWatch()
+
 if len(sys.argv)>1:
-  create_all_reports(sys.argv[1])
+  watcher.create_all_reports(sys.argv[1])
   exit()
 
 if __name__ == '__main__':
-  # old_test()
+  # watcher.old_test()
   t = time.time()
   print 'starting log at %d' % (t)
-  endless_logging(Delay=3*60,Variance=120) # seven minutes
+  watcher.endless_logging(Delay=3*60,Variance=120) # seven minutes
 
 # eof

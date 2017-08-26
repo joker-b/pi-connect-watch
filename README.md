@@ -32,7 +32,6 @@ put this into `rc.local` to start reporting on reboot for a typical pi:
 
 ```
 python /home/pi/src/pi-connect-watch/netwatch.py &
-python /home/pi/src/pi-connect-watch/netwatch.py reboot
 ```
 
 
