@@ -1,6 +1,8 @@
 # pi-netwatch
 
-regularly ping common public servers. Keep a log of success or failure. Periodically send an email report describing the connectivity situation.
+A small Raspberry Pi program to monitor home network connectivity to the internet. Could work on other systems, I used a pi. The pi needs to have emailing enabled, and chnage the email address in this repo or your copy will send mail to me rather than you.
+
+Regularly ping common public servers. Keep a log of success or failure. Periodically send an email report describing the connectivity situation.
 
 to run:
 
