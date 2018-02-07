@@ -70,6 +70,8 @@ class NetWatch:
     self.names['blinky'] = 'Blinky Pi'
     self.names['rad'] = 'Rad Pi'
     self.names['new3'] = 'The New 3'
+    self.names['less0'] = 'Less Zero'
+    self.names['more0'] = 'More Zero'
 
   def initScriptPath(self):
     filename = inspect.getframeinfo(inspect.currentframe()).filename

@@ -1,6 +1,6 @@
 # pi-netwatch
 
-A small Raspberry Pi program to monitor home network connectivity to the internet. Could work on other systems, I used a pi. The pi needs to have emailing enabled, and chnage the email address in this repo or your copy will send mail to me rather than you.
+A small Raspberry Pi program to monitor home network connectivity to the internet, and to monitor the local and possibly-dynamic IP address (handy if you want to use SSH etc). Could work on other systems, I used a pi. The pi needs to have emailing enabled, and chnage the email address in this repo or your copy will send mail to me rather than you.
 
 Regularly ping common public servers. Keep a log of success or failure. Periodically send an email report describing the connectivity situation.
 
@@ -24,7 +24,7 @@ Netwatch.py will generate report emails every few days. If you're impatient, try
 
 `python netwatch.py now`
 
-to use the default logfile name, with a report named "now" -- you might also add `python netwatch.py reboot` to send automatic notifications (including the current dynamic IP) whenever your pi reboots.
+to use the default logfile name, with a report named "now" (and as usual contianing the machine's current IP addresses).
 
 to use a specific logfile name, use the logfile instead of the report name, e.g.
 
@@ -32,7 +32,7 @@ to use a specific logfile name, use the logfile instead of the report name, e.g.
 
 ## Suggested Pi Automated Usage
 
-put this into `rc.local` to start reporting on reboot for a typical pi:
+put this into `/etc/rc.local` to start reporting on reboot for a typical pi:
 
 ```
 python /home/pi/src/pi-connect-watch/netwatch.py &
