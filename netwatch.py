@@ -10,6 +10,7 @@ import random
 import inspect
 import getpass
 import smtplib
+import urllib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -26,6 +27,26 @@ class PingService:
 
 # #################
 
+class IPWatch:
+  v4 = "?"
+  v6 = "?"
+  def __init__(self):
+    self.update()
+  def get(self):
+    return (self.v4, self.v6)
+  def update(self):
+    try:
+      response = urllib.request.urlopen('http:://ipv4.icanhazip.com')
+      self.v4 = response.read().decode().strip()
+      response = urllib.request.urlopen('http:://ipv6.icanhazip.com')
+      self.v6 = response.read().decode().strip()
+    except:
+      self.v4 = '??'
+      self.v6 = '??'
+  
+
+# #################
+
 class NetWatch:
   machine = platform.uname()[1]
   pingService = PingService()
@@ -39,6 +60,7 @@ class NetWatch:
     self.reportTimer = 0
     self.notifyFirstTime = True
     self.initialReportComplete = False
+    self.ipw = IPWatch()
 
   def initEmailNames(self):
     self.names = {}
@@ -278,9 +300,12 @@ class NetWatch:
     bodyText = Body
     if bodyText is None:
       bodyText = 'Report made at %s' % (time.ctime())
+    self.ipw.update()
+    bodyText += '\nIPv4: {}\nIPv6 {}\n'.format(self.ipw.v4,self.ipw.v6)
     htmlText = Html
     if htmlText is None:
       htmlText = '<html><body><p>%s</p></body></html>'%(bodyText)
+    htmlText += '\n<ul><li>IPv4: {}</li><li>nIPv6 {}</li></ul>\n'.format(self.ipw.v4,self.ipw.v6)
     msg = MIMEMultipart('mixed')
     msg['From'] = '%s %s <kevin.bjorke@gmail.com>' % (self.names[self.machine],self.userName)
     msg['To'] = 'Kevin Bjorke <kevin.bjorke@gmail.com>'
