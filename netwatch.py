@@ -10,7 +10,7 @@ import random
 import inspect
 import getpass
 import smtplib
-import urllib
+import urllib2
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -36,10 +36,10 @@ class IPWatch:
     return (self.v4, self.v6)
   def update(self):
     try:
-      response = urllib.request.urlopen('http:://ipv4.icanhazip.com')
-      self.v4 = response.read().decode().strip()
-      response = urllib.request.urlopen('http:://ipv6.icanhazip.com')
-      self.v6 = response.read().decode().strip()
+      response = urllib2.urlopen('http://ipv4.icanhazip.com')
+      self.v4 = response.read().strip()
+      response = urllib2.urlopen('http://ipv6.icanhazip.com')
+      self.v6 = response.read().strip()
     except:
       self.v4 = '??'
       self.v6 = '??'
@@ -305,7 +305,7 @@ class NetWatch:
     htmlText = Html
     if htmlText is None:
       htmlText = '<html><body><p>%s</p></body></html>'%(bodyText)
-    htmlText += '\n<ul><li>IPv4: {}</li><li>nIPv6 {}</li></ul>\n'.format(self.ipw.v4,self.ipw.v6)
+    htmlText += '\n<ul><li>IPv4: {}</li><li>IPv6 {}</li></ul>\n'.format(self.ipw.v4,self.ipw.v6)
     msg = MIMEMultipart('mixed')
     msg['From'] = '%s %s <kevin.bjorke@gmail.com>' % (self.names[self.machine],self.userName)
     msg['To'] = 'Kevin Bjorke <kevin.bjorke@gmail.com>'
