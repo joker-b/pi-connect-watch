@@ -4,7 +4,9 @@ A small Raspberry Pi program to monitor home network connectivity to the interne
 
 Regularly ping common public servers. Keep a log of success or failure. Periodically send an email report describing the connectivity situation.
 
-to run:
+Each time a report is sent, the email will also contain the current IPv4 and IPv6 addresses of the pi.
+
+To run (pthon2 btw):
 
 `python netwatch.py`
 
@@ -22,7 +24,7 @@ Netwatch.py will generate report emails every few days. If you're impatient, try
 
 `python netwatch.py now`
 
-to use the default logfile name, with a report named "now"
+to use the default logfile name, with a report named "now" -- you might also add `python netwatch.py reboot` to send automatic notifications (including the current dynamic IP) whenever your pi reboots.
 
 to use a specific logfile name, use the logfile instead of the report name, e.g.
 
