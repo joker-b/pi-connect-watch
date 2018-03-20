@@ -30,8 +30,56 @@ class PingService:
 class IPWatch:
   v4 = "?"
   v6 = "?"
-  def __init__(self):
+  prev4 = None
+  prev6 = None
+  def __init__(self,DeviceName,LogName="current_ip.log"):
+    self.deviceName = DeviceName
+    self.logName = LogName
     self.update()
+    self.notify('Startup')
+    self.log()
+  def notify(self,Reason):
+    "send email because IP addresses have changed (or at startup)"
+    bodyText = 'IPv4: {}\nIPv6 {}\n'.format(self.ipw.v4,self.ipw.v6)
+    htmlText = '<html><body><ul>\n'
+    htmlText += '<li><b>IPv4</b> {}</li>\n'.format(self.ipw.v4)
+    htmlText += '<li><b>IPv6</b> {}</li>\n'.format(self.ipw.v6)
+    htmlText += '</ul></body></html>'
+    msg = MIMEMultipart('mixed')
+    msg['From'] = '{} <kevin.bjorke@gmail.com>'.format(self.deviceName)
+    msg['To'] = 'Kevin Bjorke <kevin.bjorke@gmail.com>'
+    msg['Subject'] = "{} {} IP Report".format(self.deviceName,Reason)
+    msg.preamble = 'odd why would you see this?'
+    alt = MIMEMultipart('alternative')
+    mbody = MIMEText(bodyText,'plain')
+    mhtml = MIMEText(htmlText,'html')
+    alt.attach(mbody)
+    alt.attach(mhtml)
+    msg.attach(alt)
+    try:
+      s = smtplib.SMTP('localhost')
+      s.sendmail('kevin.bjorke@gmail.com', 'kevin.bjorke@gmail.com', msg.as_string())
+      s.quit()
+    except:
+      print "Sendmail Connection Error on IP Change"
+      return False
+    return True
+
+  def log(self):
+    "no check for file system failure"
+    with open(self.logName,"w") as fp:
+      fp.write('{}\n{}\n'.format(self.v4,self.v6))
+  def check_for_change(self):
+    "Get the current IP address. If it has changed, send a notification"
+    self.update()
+    with open(self.logName,"r") as fp:
+      n4 = fp.readline().strip()
+      n6 = fp.readline().strip()
+      matched = self.v4 == n4 and self.v6 == n6
+      if not matched:
+        print('"IP address appears to have changed from "{}" to "{}"'.format(n4, self.v4))
+        self.notify('Change')
+        self.log()
   def get(self):
     return (self.v4, self.v6)
   def update(self):
@@ -42,8 +90,7 @@ class IPWatch:
       self.v6 = response.read().strip()
     except:
       self.v4 = '??'
-      self.v6 = '??'
-  
+      self.v6 = '??' 
 
 # #################
 
@@ -60,7 +107,7 @@ class NetWatch:
     self.reportTimer = 0
     self.notifyFirstTime = True
     self.initialReportComplete = False
-    self.ipw = IPWatch()
+    self.ipw = IPWatch(self.names[self.machine])
 
   def initEmailNames(self):
     self.names = {}
@@ -114,6 +161,8 @@ class NetWatch:
       now = time.time()
       if not self.connected(Target=Target):
         now = -now
+      else:
+        self.ipw.check_for_change()
       try:
         fp = open(self.logFileName,'a')
         fp.write('%d\n'%(now))
@@ -129,13 +178,13 @@ class NetWatch:
       self.reportTimer = self.reportTimer+sleepTime
       if self.reportTimer >= self.firstReportDelay and not self.initialReportComplete:
         if self.create_all_reports("Startup"):
-	  print "initial report sent"
-	  self.initialReportComplete = True
-	else:
-	  print "initial report failed?"
-      if self.reportTimer >= self.reportInterval:
-        if self.create_all_reports():
-          self.reportTimer = 0
+          print "initial report sent"
+          self.initialReportComplete = True
+        else:
+          print "initial report failed?"
+        if self.reportTimer >= self.reportInterval:
+          if self.create_all_reports():
+            self.reportTimer = 0
 
   def read_log(self,LogFile=None,Start=None):
     entries = []
