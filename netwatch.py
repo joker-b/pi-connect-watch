@@ -40,10 +40,10 @@ class IPWatch:
     self.log()
   def notify(self,Reason):
     "send email because IP addresses have changed (or at startup)"
-    bodyText = 'IPv4: {}\nIPv6 {}\n'.format(self.ipw.v4,self.ipw.v6)
+    bodyText = 'IPv4: {}\nIPv6 {}\n'.format(self.v4,self.v6)
     htmlText = '<html><body><ul>\n'
-    htmlText += '<li><b>IPv4</b> {}</li>\n'.format(self.ipw.v4)
-    htmlText += '<li><b>IPv6</b> {}</li>\n'.format(self.ipw.v6)
+    htmlText += '<li><b>IPv4</b> {}</li>\n'.format(self.v4)
+    htmlText += '<li><b>IPv6</b> {}</li>\n'.format(self.v6)
     htmlText += '</ul></body></html>'
     msg = MIMEMultipart('mixed')
     msg['From'] = '{} <kevin.bjorke@gmail.com>'.format(self.deviceName)

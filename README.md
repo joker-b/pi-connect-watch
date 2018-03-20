@@ -1,12 +1,14 @@
 # pi-netwatch
 
-A small Raspberry Pi program to monitor home network connectivity to the internet, and to monitor the local and possibly-dynamic IP address (handy if you want to use SSH etc). Could work on other systems, I used a pi. The pi needs to have emailing enabled, and chnage the email address in this repo or your copy will send mail to me rather than you.
+A small Raspberry Pi program to monitor home network connectivity to the internet, and to monitor the local and possibly-dynamic IP address (handy if you want to use SSH etc). Could work on other systems, I used a pi.
+
+The pi needs to have emailing enabled (I used `exim4`), and change the email address in this repo or your copy will send mail to me rather than you.
 
 Regularly ping common public servers. Keep a log of success or failure. Periodically send an email report describing the connectivity situation.
 
 Each time a report is sent, the email will also contain the current IPv4 and IPv6 addresses of the pi.
 
-To run (pthon2 btw):
+To run (python2 btw):
 
 `python netwatch.py`
 
