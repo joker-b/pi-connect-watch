@@ -8,6 +8,8 @@ Regularly ping common public servers. Keep a log of success or failure. Periodic
 
 Each time a report is sent, the email will also contain the current IPv4 and IPv6 addresses of the pi.
 
+If the device IP address changes while logging network performance, say because of a dynamic DNS re-routing, a notification will be sent.
+
 To run (python2 btw):
 
 `python netwatch.py`
@@ -19,6 +21,12 @@ On pi2's you may need to use `sudo`:
 `sudo python netwatch.py`
 
 Running the command will give you a hint if this is needed
+
+## IP-Only Reporting
+
+`python netwatch.py ip`
+
+Only IP address reports will be sent.
 
 ## Immediate Reporting
 

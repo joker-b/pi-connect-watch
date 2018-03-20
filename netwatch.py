@@ -32,8 +32,8 @@ class IPWatch:
   v6 = "?"
   prev4 = None
   prev6 = None
-  def __init__(self,DeviceName,LogName="current_ip.log"):
-    self.deviceName = DeviceName
+  def __init__(self,LogName="current_ip.log"):
+    self.deviceName = platform.uname()[1]
     self.logName = LogName
     self.update()
     self.notify('Startup')
@@ -100,6 +100,7 @@ class NetWatch:
   firstReportDelay = 600 # ten minutes, in seconds
   reportInterval = 3600*24*7 # seven days, in seconds
   def __init__(self):
+    self.ip_only = False
     self.userName = getpass.getuser()
     self.initEmailNames()
     self.initScriptPath()
@@ -107,16 +108,18 @@ class NetWatch:
     self.reportTimer = 0
     self.notifyFirstTime = True
     self.initialReportComplete = False
-    self.ipw = IPWatch(self.names[self.machine])
+    self.ipw = IPWatch()
 
   def initEmailNames(self):
     self.names = {}
-    self.names[self.machine] = 'R Pi' # may be overwritten in the list below
+    self.names[self.machine] = self.machine # may be overwritten in the list below
     self.names['pinot3'] = 'Pi Not 3'
     self.names['arc'] = 'Arc Pi',
+    self.names['gerald'] = 'Gerald',
     self.names['blinky'] = 'Blinky Pi'
     self.names['rad'] = 'Rad Pi'
     self.names['new3'] = 'The New 3'
+    self.names['joybox'] = 'JoyBox'
     self.names['less0'] = 'Less Zero'
     self.names['more0'] = 'More Zero'
 
@@ -163,14 +166,15 @@ class NetWatch:
         now = -now
       else:
         self.ipw.check_for_change()
-      try:
-        fp = open(self.logFileName,'a')
-        fp.write('%d\n'%(now))
-        fp.close()
-      except:
-        print "Unable to write to logfile '%s' at time %d" % (self.logFileName, now)
-        return # not so endless
-      print "logged at %d (%d, %d)" % (self.reportTimer, self.firstReportDelay, self.reportInterval)
+      if not self.ip_only:
+        try:
+          fp = open(self.logFileName,'a')
+          fp.write('%d\n'%(now))
+          fp.close()
+        except:
+          print "Unable to write to logfile '%s' at time %d" % (self.logFileName, now)
+          return # not so endless
+        print "logged at %d (%d, %d)" % (self.reportTimer, self.firstReportDelay, self.reportInterval)
       sleepTime = Delay
       if Variance != 0:
         sleepTime = sleepTime + random.randint(-Variance,Variance)
@@ -385,6 +389,8 @@ class NetWatch:
       print 'got %d of %d success on %s' % (r,ct,trg)
 
   def create_all_reports(self,LogFile=None):
+    if self.ip_only:
+      return True
     reportName = LogFile
     if reportName is None or os.path.exists(reportName):
         reportName = "Standard"
@@ -400,8 +406,11 @@ class NetWatch:
 watcher = NetWatch()
 
 if len(sys.argv)>1:
-  watcher.create_all_reports(sys.argv[1])
-  exit()
+  if sys.argv[1] == 'ip':
+    watcher.ip_only = True
+  else:
+    watcher.create_all_reports(sys.argv[1])
+    exit()
 
 if __name__ == '__main__':
   # watcher.old_test()
