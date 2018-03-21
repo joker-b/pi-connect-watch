@@ -90,7 +90,7 @@ class IPWatch:
       self.v6 = response.read().strip()
     except: # no connection, so if there's already a value, keep it
       self.v4 = self.v4 or '??' 
-      self.v6 = self.v4 or '??' 
+      self.v6 = self.v6 or '??' 
 
 # #################
 
