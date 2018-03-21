@@ -28,8 +28,8 @@ class PingService:
 # #################
 
 class IPWatch:
-  v4 = "?"
-  v6 = "?"
+  v4 = None
+  v6 = None
   prev4 = None
   prev6 = None
   def __init__(self,LogName="current_ip.log"):
@@ -88,9 +88,9 @@ class IPWatch:
       self.v4 = response.read().strip()
       response = urllib2.urlopen('http://ipv6.icanhazip.com')
       self.v6 = response.read().strip()
-    except:
-      self.v4 = '??'
-      self.v6 = '??' 
+    except: # no connection, so if there's already a value, keep it
+      self.v4 = self.v4 or '??' 
+      self.v6 = self.v4 or '??' 
 
 # #################
 
