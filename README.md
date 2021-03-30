@@ -48,5 +48,10 @@ put this into `/etc/rc.local` to start reporting on reboot for a typical pi:
 python /home/pi/src/pi-connect-watch/netwatch.py &
 ```
 
+or for just the IP address
+```
+/home/pi/src/pi-connect-watch/ez-ip.sh &
+```
+
 
 
